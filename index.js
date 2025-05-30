@@ -1,4 +1,4 @@
-import { appendCarousel, clear, createCarouselItem, start } from "./Carousel.js";
+import { appendCarousel, clear, createCarouselItem } from "./Carousel.js";
 
 const { Carousel } = bootstrap
 
