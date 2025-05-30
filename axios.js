@@ -28,8 +28,10 @@ const body = document.querySelector('body');
  *   send it manually with all of your requests! You can also set a default base URL!
  */
 const API_KEY = "live_3oxvCehvrn1ZuaXKUr4eZDlajO3uvJkZcBT6I4nZqArGmcfFEbH4lKGS4a6JA9Bx";
+const USER_ID = "new-user-1234";
 axios.defaults.headers['x-api-key'] = API_KEY;
 axios.defaults.baseURL = 'https://api.thecatapi.com/v1'
+axios.defaults.onDownloadProgress = updateProgress;
 
 /**
  * 5. Add axios interceptors to log the time between request and response to the console.
@@ -52,7 +54,6 @@ axios.interceptors.request.use(request => {
 
 axios.interceptors.response.use(response => {
     body.style.removeProperty('cursor');
-    console.log(response);
     console.log(`Request took ${new Date() - response.config.metadata.startTime} ms`);
     return response;
 })
@@ -75,8 +76,6 @@ axios.interceptors.response.use(response => {
 let maxBitesSeen = 0;
 
 function updateProgress(event) {
-    console.log(event)
-
     const currentLoad = event.loaded / maxBitesSeen * 100;
     const total = Math.min(currentLoad, 100);
 
@@ -84,10 +83,7 @@ function updateProgress(event) {
 }
 
 async function initialLoad() {
-    const breeds = await axios.get('/breeds', {
-        onDownloadProgress: updateProgress
-    })
-    console.log(breeds);
+    const breeds = await axios.get('/breeds')
 
     for (const breed of breeds.data) {
         const optionEl = document.createElement('option');
@@ -105,9 +101,7 @@ function populateBreed() {
     breedSelect.addEventListener('change', async event => {
         const breedId = event.target.value;
         const imgLimit = 100;
-        const breedImgs = await axios(`/images/search?limit=${imgLimit}&breed_ids=${breedId}`, {
-            onDownloadProgress: updateProgress
-        });
+        const breedImgs = await axios(`/images/search?limit=${imgLimit}&breed_ids=${breedId}`);
 
         clearData();
         infoDump.appendChild(mapInfoData(breedImgs.data[0].breeds[0]));
@@ -162,17 +156,22 @@ function clearData() {
  *   you delete that favourite using the API, giving this function "toggle" functionality.
  * - You can call this function by clicking on the heart at the top right of any image.
  */
-// {
-// 	"image_id":asf2,
-// 	"sub_id": "my-user-1234"
-// }
 export async function favourite(imgId) {
-    console.log('test' + imgId);
-    axios.post('/favourites', {
-        image_id: imgId,
-        sub_id: 'my-user-1234'
-    })
-        .catch(err => console.log(err))
+    if (localStorage.getItem(imgId) === null) {
+        const favoriteId = await axios.post('/favourites', {
+            image_id: imgId,
+            sub_id: USER_ID
+        })
+            .catch(err => console.log(err));
+        localStorage.setItem(imgId, favoriteId.data.id);
+        console.log(favoriteId.data)
+    } else {
+        const favId = localStorage.getItem(imgId);
+        const resp = await axios.delete(`/favourites/${favId}`)
+            .catch(err => console.log(err));
+        console.log(`response: ${resp}, favId: ${favId}`);
+        localStorage.removeItem(imgId);
+    }
 }
 
 /**
@@ -184,6 +183,19 @@ export async function favourite(imgId) {
  *    If that isn't in its own function, maybe it should be so you don't have to
  *    repeat yourself in this section.
  */
+getFavouritesBtn.addEventListener('click', getFavourites);
+
+async function getFavourites() {
+    const favourites = await axios.get('/favourites');
+    console.log(favourites.data);
+
+    clearData();
+    favourites.data.forEach(fav => {
+        const carouselEl = createCarouselItem(fav.image.url, fav.alt, fav.image_id);
+        appendCarousel(carouselEl);
+    });
+}
+
 
 /**
  * 10. Test your site, thoroughly!
