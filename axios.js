@@ -191,14 +191,20 @@ export async function favourite(imgId) {
  *    If that isn't in its own function, maybe it should be so you don't have to
  *    repeat yourself in this section.
  */
+getFavouritesBtn.addEventListener('click', getFavourites);
+
 async function getFavourites() {
     const favourites = await axios.get('/favourites');
+    
+    clearData();
     favourites.data.forEach(fav => {
+        // To handle missing data (for development purposes only).
+        // if (!localStorage.getItem(fav.image_id)) {
+        //     localStorage.setItem(fav.image_id, fav.id)
+        // }
         buildCarousel(fav.image.url, fav.alt, fav.image_id);
     });
 }
-
-getFavouritesBtn.addEventListener('click', getFavourites);
 
 /**
  * 10. Test your site, thoroughly!
