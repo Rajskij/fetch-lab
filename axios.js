@@ -28,7 +28,7 @@ const body = document.querySelector('body');
  *   send it manually with all of your requests! You can also set a default base URL!
  */
 const API_KEY = "live_3oxvCehvrn1ZuaXKUr4eZDlajO3uvJkZcBT6I4nZqArGmcfFEbH4lKGS4a6JA9Bx";
-const USER_ID = "new-user-1234";
+const USER_ID = "my-user-1234";
 axios.defaults.headers['x-api-key'] = API_KEY;
 axios.defaults.baseURL = 'https://api.thecatapi.com/v1'
 axios.defaults.onDownloadProgress = updateProgress;
@@ -104,12 +104,20 @@ function populateBreed() {
         const breedImgs = await axios(`/images/search?limit=${imgLimit}&breed_ids=${breedId}`);
 
         clearData();
-        infoDump.appendChild(mapInfoData(breedImgs.data[0].breeds[0]));
+        if (!breedImgs.data || breedImgs.data.length === 0) {
+            return;
+        }
+
         breedImgs.data.forEach(breedImg => {
-            const carouselEl = createCarouselItem(breedImg.url, event.target.textContent, breedImg.id);
-            appendCarousel(carouselEl);
+            buildCarousel(breedImg.url, event.target.textContent, breedImg.id);
         });
+        infoDump.appendChild(mapInfoData(breedImgs.data[0].breeds[0]));
     });
+}
+
+function buildCarousel(url, alt, imgId) {
+    const carouselEl = createCarouselItem(url, alt, imgId);
+    appendCarousel(carouselEl);
 }
 
 function mapInfoData(info) {
@@ -183,19 +191,14 @@ export async function favourite(imgId) {
  *    If that isn't in its own function, maybe it should be so you don't have to
  *    repeat yourself in this section.
  */
-getFavouritesBtn.addEventListener('click', getFavourites);
-
 async function getFavourites() {
     const favourites = await axios.get('/favourites');
-    console.log(favourites.data);
-
-    clearData();
     favourites.data.forEach(fav => {
-        const carouselEl = createCarouselItem(fav.image.url, fav.alt, fav.image_id);
-        appendCarousel(carouselEl);
+        buildCarousel(fav.image.url, fav.alt, fav.image_id);
     });
 }
 
+getFavouritesBtn.addEventListener('click', getFavourites);
 
 /**
  * 10. Test your site, thoroughly!
@@ -204,3 +207,7 @@ async function getFavourites() {
  * - Test other breeds as well. Not every breed has the same data available, so
  *   your code should account for this.
  */
+// added this condition to handle problems with fetch
+// if (!breedImgs.data || breedImgs.data.length === 0) {
+//     return;
+// }
