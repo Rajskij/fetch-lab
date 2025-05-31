@@ -179,6 +179,7 @@ export async function favourite(imgId) {
             .catch(err => console.log(err));
         console.log(`response: ${resp}, favId: ${favId}`);
         localStorage.removeItem(imgId);
+        getFavourites();
     }
 }
 
