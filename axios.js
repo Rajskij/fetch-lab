@@ -73,13 +73,8 @@ axios.interceptors.response.use(response => {
  *   once or twice per request to this API. This is still a concept worth familiarizing yourself
  *   with for future projects.
  */
-let maxBitesSeen = 0;
-
 function updateProgress(event) {
-    const currentLoad = event.loaded / maxBitesSeen * 100;
-    const total = Math.min(currentLoad, 100);
-
-    progressBar.style.width = `${total}%`;
+    progressBar.style.width = `${100}%`;
 }
 
 async function initialLoad() {
